@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaithozhil Marketplace</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f2f4f8; font-family: 'Noto Sans Malayalam', sans-serif; padding-bottom: 80px; margin: 0; }
+        
+        /* --- SPLASH SCREEN --- */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #2196f3; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.5s ease-out;
+        }
+        .splash-logo { font-size: 60px; color: #ffffff; margin-bottom: 20px; }
+        .splash-text { font-size: 24px; font-weight: bold; color: #fff; letter-spacing: 1px; }
+
+        /* --- LOADING OVERLAY --- */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 5000;
+            display: none; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .loader-box { background: white; padding: 25px 40px; border-radius: 10px; text-align: center; }
+        .loader-text { margin-top: 15px; font-weight: bold; color: #333; }
+
+        /* HEADER */
+        .app-header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .logo-box { width: 32px; height: 32px; background: #2196f3; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+        .app-title { font-weight: 700; font-size: 1.1rem; color: #333; }
+
+        /* HOME LIST */
+        .products-list { padding: 15px; }
+        .home-card { background: white; border-radius: 12px; overflow: hidden; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.05); display: flex; flex-direction: column; margin-bottom: 20px; position: relative; }
+        .home-card-img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid #eee; background-color: #eee; }
+        .home-card-body { padding: 15px; }
+        .shop-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; z-index: 2; }
+
+        /* COMMON */
+        .form-card { background: white; border: 1px solid #eee; border-radius: 10px; padding: 20px; margin: 15px; }
+        .form-control, .form-select { margin-bottom: 12px; padding: 10px; font-size: 0.95rem; }
+        .page-section { display: none; } .page-section.active { display: block; }
+        .list-card { background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+        .list-img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; margin-right: 15px; border: 1px solid #ddd; }
+        .btn-more { background: #e3f2fd; color: #0d6efd; font-size: 0.9rem; border: 1px solid #0d6efd; padding: 10px 0; border-radius: 8px; width: 100%; font-weight: bold; margin-top: 10px; }
+        .btn-download-app { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 25px; border-radius: 50px; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 11px; width: 25%; cursor: pointer; text-decoration: none; } 
+        .nav-item.active { color: #2196f3; }
+
+        /* MODALS */
+        .checkout-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: flex-end; }
+        .checkout-content { background: white; width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; max-height: 80vh; overflow-y: auto; }
+        .detail-box { background: white; padding: 20px; min-height: 100vh; }
+        .detail-img { width: 100%; height: 300px; object-fit: contain; }
+        .district-pill { background: white; border: 1px solid #ccc; padding: 6px 18px; border-radius: 20px; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
+        .district-pill.active { background: #2196f3; color: white; border-color: #2196f3; }
+        .msg-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <i class="fas fa-store splash-logo"></i>
+        <div class="splash-text">KAITHOZHIL</div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loading-overlay">
+        <div class="loader-box">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="loader-text" id="loader-msg">Loading...</div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="app-header" id="main-header">
+        <div class="d-flex align-items-center gap-2">
+            <div class="logo-box"><i class="fas fa-store"></i></div>
+            <div class="app-title">Kaithozhil</div>
+        </div>
+        <i class="fas fa-ellipsis-v text-secondary"></i>
+    </div>
+    
+    <div class="app-header" id="detail-header" style="display:none;">
+        <i class="fas fa-arrow-left fa-lg text-secondary" onclick="backToHome()"></i>
+        <div class="app-title ms-3">Details</div>
+    </div>
+
+    <!-- 1. HOME -->
+    <div id="page-home" class="page-section active">
+        <div class="text-center mt-3"><a href="#" class="btn-download-app" onclick="downloadApp()">Download App</a></div>
+        <div class="px-3 mt-3"><img id="home-banner-img" src="https://images.unsplash.com/photo-1593693397690-362cb9666fc2?q=80&w=1000" style="width:100%; height:170px; object-fit:cover; border-radius:15px;"></div>
+        <div class="px-3 mt-2" id="text-banner-area"></div>
+        <div class="d-flex px-3 gap-2 overflow-auto my-3" id="district-scroll" style="scrollbar-width:none;"></div>
+        <div id="feed-container" class="products-list"><div class="text-center mt-5 text-muted"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+    </div>
+
+    <!-- 2. DETAIL -->
+    <div id="page-detail" class="page-section"><div id="detail-content"></div></div>
+
+    <!-- 3. CART -->
+    <div id="page-cart" class="page-section"><div class="p-3"><h5 class="text-center mb-3">My Cart</h5><div id="cart-list"></div></div></div>
+
+    <!-- 4. ORDERS -->
+    <div id="page-orders" class="page-section">
+        <div class="form-card" id="cust-login-box"><h5>Track Orders</h5><input type="tel" id="cust-phone-input" class="form-control" placeholder="Mobile Number"><button class="btn btn-primary w-100 mt-2" onclick="customerLogin()">View Orders</button></div>
+        <div id="cust-orders-view" style="display:none;">
+             <div class="p-3">
+                 <div class="d-flex justify-content-between align-items-center mb-3">
+                     <h5 class="m-0">My Orders</h5>
+                     <button class="btn btn-sm btn-outline-secondary" onclick="exitOrderView()">Exit</button>
+                 </div>
+                 <div id="cust-orders-list"></div>
+             </div>
+        </div>
+    </div>
+
+    <!-- 5. SELLER -->
+    <div id="page-seller" class="page-section">
+        <div id="seller-login-view">
+            <div class="form-card text-center"><h5>Seller Login</h5><input type="tel" class="form-control" id="login-phone" placeholder="Phone Number"><input type="password" class="form-control" id="login-pass" placeholder="Password"><button class="btn btn-success w-100 mt-2" onclick="loginSeller()">Login</button><div class="mt-3"><a href="#" onclick="showRegister()">Register Here</a></div></div>
+        </div>
+        <div id="seller-register-view" style="display:none;">
+            <div class="form-card"><h5 class="text-center">Register</h5><input type="text" class="form-control" id="reg-name" placeholder="Name"><input type="text" class="form-control" id="reg-shop" placeholder="Shop Name"><select class="form-select" id="reg-dist"><option disabled selected>District</option></select><input type="tel" class="form-control" id="reg-phone" placeholder="Phone Number"><input type="password" class="form-control" id="reg-pass" placeholder="Password"><button class="btn btn-success w-100 mt-2" onclick="registerSeller()">Register</button><div class="mt-3 text-center"><a href="#" onclick="showLogin()">Login</a></div></div>
+        </div>
+        <div id="seller-dash-view" style="display: none;">
+            <div class="form-card d-flex justify-content-between"><h5 id="dash-shop-name">Shop</h5><button class="btn btn-sm btn-outline-danger" onclick="logoutSeller()">Logout</button></div>
+            <div class="form-card"><h6>Admin Messages</h6><div id="admin-msg-container"></div></div>
+            <div class="px-3"><button class="btn btn-success w-100 mb-3 p-2 fw-bold" onclick="openAdminChat()"><i class="fab fa-whatsapp fa-lg"></i> Chat with Admin</button></div>
+            <div class="form-card">
+                <h6 id="form-title" class="fw-bold">Add Product</h6>
+                <input type="hidden" id="edit-prod-id"><input type="hidden" id="edit-prod-db-id">
+                <input type="text" class="form-control" id="prod-name" placeholder="Name">
+                <input type="number" class="form-control" id="prod-price" placeholder="Price">
+                <select class="form-select" id="prod-dist"><option disabled selected>District</option></select>
+                <input type="text" class="form-control" id="prod-area" placeholder="Area">
+                <input type="number" class="form-control" id="prod-delivery" placeholder="Delivery Charge">
+                <input type="file" class="form-control" id="prod-file">
+                <button class="btn btn-warning w-100 mb-2" onclick="payFee()">Pay Fee ₹<span id="fee-amount">25</span></button>
+                <button class="btn btn-success w-100" id="btn-list-prod" onclick="saveProduct()" disabled>List Product</button>
+                <button class="btn btn-secondary w-100 mt-2" id="btn-cancel-edit" style="display:none;" onclick="cancelEdit()">Cancel Edit</button>
+            </div>
+            <div class="form-card"><h6>My Products</h6><div id="seller-products-list"></div></div>
+            <div class="form-card"><h6>Incoming Orders</h6><div id="seller-orders-list"></div></div>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div class="checkout-modal" id="checkout-modal">
+        <div class="checkout-content"><h5>Shipping Details</h5><input type="text" class="form-control" id="addr-name" placeholder="Name"><input type="text" class="form-control" id="addr-house" placeholder="House Name"><input type="text" class="form-control" id="addr-area" placeholder="Area/Street"><input type="tel" class="form-control" id="addr-phone" placeholder="Phone Number"><input type="number" class="form-control" id="addr-pin" placeholder="Pincode"><div class="d-flex gap-2 mt-3"><button class="btn btn-secondary w-50" onclick="closeCheckout()">Cancel</button><button class="btn btn-success w-50 fw-bold" onclick="confirmOrder()">Confirm</button></div></div>
+    </div>
+
+    <!-- NAV -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="switchPage('home', this)"><i class="fas fa-home fs-5"></i>Home</a>
+        <a href="#" class="nav-item" onclick="switchPage('cart', this)"><i class="fas fa-shopping-cart fs-5"></i>Cart</a>
+        <a href="#" class="nav-item" onclick="switchPage('orders', this)"><i class="fas fa-clipboard-list fs-5"></i>Orders</a>
+        <a href="#" class="nav-item" onclick="switchPage('seller', this)"><i class="fas fa-store fs-5"></i>Seller</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const SUPABASE_URL = 'https://gljaoynkfblthmatfeeg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsamFveW5rZmJsdGhtYXRmZWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NTI5NzIsImV4cCI6MjA4NDAyODk3Mn0.9zPLJbVnS8h2zFN_eEZ-lWR3UMxG4l8sdg0bq3pXvnk';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const districts = ["തിരുവനന്തപുരം", "കൊല്ലം", "പത്തനംതിട്ട", "ആലപ്പുഴ", "കോട്ടയം", "ഇടുക്കി", "എറണാകുളം", "തൃശ്ശൂർ", "പാലക്കാട്", "മലപ്പുറം", "കോഴിക്കോട്", "വയനാട്", "കണ്ണൂർ", "കാസർഗോഡ്"];
+        let products = [], orders = [], sellers = [], adminMessages = [], settings = { fee: 25, banners: [], textBanners: [], apkUrl: '' };
+        let cart = [], currentShop = "", activeFilter = 'All', paymentDone = false, tempBuyProduct = null;
+
+        // INIT
+        window.onload = async function() {
+            setTimeout(() => { document.getElementById('splash-screen').style.opacity = '0'; setTimeout(() => { document.getElementById('splash-screen').style.display = 'none'; }, 500); }, 2500);
+            fillDistricts(); await fetchData(); renderHome();
+            if(localStorage.getItem('kt_shop')) { currentShop = localStorage.getItem('kt_shop'); showDashboard(currentShop); }
+        };
+
+        function showLoading(msg) { document.getElementById('loader-msg').innerText = msg; document.getElementById('loading-overlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+
+        async function fetchData() {
+            try {
+                let { data: allData } = await db.from('app_data').select('*');
+                products = allData.filter(x => x.type === 'product').map(x => ({ ...x.content, db_id: x.id }));
+                orders = allData.filter(x => x.type === 'order').map(x => ({ ...x.content, db_id: x.id }));
+                sellers = allData.filter(x => x.type === 'seller').map(x => x.content);
+                adminMessages = allData.filter(x => x.type === 'message').map(x => x.content);
+                let setRow = allData.find(x => x.type === 'setting');
+                if(setRow) { settings = setRow.content; applySettings(); }
+            } catch (err) { console.error(err); }
+        }
+
+        async function saveToDB(type, content) { await db.from('app_data').insert([{ type: type, content: content }]); await fetchData(); }
+        async function updateInDB(db_id, content) { await db.from('app_data').update({ content: content }).eq('id', db_id); await fetchData(); }
+        async function deleteFromDB(db_id) { await db.from('app_data').delete().eq('id', db_id); await fetchData(); }
+
+        function fillDistricts() {
+            const list = `<option disabled selected>Select District</option>` + districts.map(d=>`<option>${d}</option>`).join('');
+            document.getElementById('reg-dist').innerHTML = list; document.getElementById('prod-dist').innerHTML = list; document.getElementById('district-scroll').innerHTML = `<div class="district-pill active" onclick="filterDist('All', this)">All</div>` + districts.map(d=>`<div class="district-pill" onclick="filterDist('${d}', this)">${d}</div>`).join(' ');
+        }
+        function applySettings() {
+            if(settings.banner) document.getElementById('home-banner-img').src = settings.banner;
+            let txt = ''; if(settings.textBanners && settings.textBanners.length > 0) txt = settings.textBanners.join(" | "); else if(settings.text) txt = settings.text;
+            if(txt) document.getElementById('text-banner-area').innerHTML = `<div style="background:#fff3cd;color:#856404;padding:8px;border-radius:5px;"><marquee>${txt}</marquee></div>`;
+            document.getElementById('fee-amount').innerText = settings.fee || 25;
+        }
+        function filterDist(d, e) { document.querySelectorAll('.district-pill').forEach(x=>x.classList.remove('active')); e.classList.add('active'); activeFilter = d; renderHome(); }
+
+        window.switchPage = function(page, elem) {
+            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active');
+            document.getElementById('main-header').style.display = 'flex'; document.getElementById('detail-header').style.display = 'none';
+            if(elem) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); elem.classList.add('active'); }
+            if(page === 'home') renderHome(); if(page === 'cart') renderCart(); if(page === 'seller') { currentShop ? showDashboard(currentShop) : showLogin(); }
+        }
+        window.backToHome = function() { switchPage('home', document.querySelectorAll('.nav-item')[0]); }
+
+        function renderHome() {
+            const div = document.getElementById('feed-container'); div.innerHTML = '';
+            let items = products.filter(p => p.status === 'Approved');
+            if(activeFilter !== 'All') items = items.filter(p => p.dist === activeFilter);
+            if(items.length === 0) { div.innerHTML = '<div class="text-center mt-5 text-muted">No items found.</div>'; return; }
+            items.forEach(p => {
+                const inCart = cart.find(c => c.id === p.id);
+                div.innerHTML += `<div class="home-card"><div style="position:relative;"><img src="${p.img}" class="home-card-img" onerror="this.src='https://via.placeholder.com/300'"><span class="shop-badge"><i class="fas fa-store me-1"></i> ${p.seller}</span></div><div class="home-card-body"><h5 class="fw-bold mb-1 text-dark">${p.title}</h5><div class="d-flex justify-content-between align-items-center"><h4 class="text-danger fw-bold mb-0">₹${p.price}</h4><small class="text-muted"><i class="fas fa-map-marker-alt"></i> ${p.area}, ${p.dist}</small></div><div class="d-flex justify-content-between align-items-center mt-2"><small class="text-success fw-bold">Del: ₹${p.delivery}</small>${inCart ? '<span class="badge bg-danger">In Cart</span>' : ''}</div><button class="btn-more" onclick="openDetail(${p.id})">കൂടുതൽ വിവരങ്ങൾ</button></div></div>`;
+            });
+        }
+
+        window.openDetail = function(id) {
+            const p = products.find(x => x.id === id);
+            document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active')); document.getElementById('page-detail').classList.add('active');
+            document.getElementById('main-header').style.display = 'none'; document.getElementById('detail-header').style.display = 'flex';
+            let qtyOpts = ''; for(let i=1; i<=10; i++) qtyOpts += `<option value="${i}">${i}</option>`;
+            document.getElementById('detail-content').innerHTML = `<div class="detail-box"><img src="${p.img}" class="detail-img"><h3 class="mt-3 fw-bold">${p.title}</h3><h1 class="text-danger fw-bold">₹${p.price}</h1><p class="text-muted">Delivery: ₹${p.delivery}</p><div class="bg-light p-3 rounded mb-3 border"><small>Seller:</small> <strong class="text-dark">${p.seller}</strong><br>${p.area}, ${p.dist}</div><div class="mb-3"><label>Qty:</label><select class="form-select w-50" id="buy-qty">${qtyOpts}</select></div><button class="btn btn-warning w-100 mb-2 py-2 fw-bold" onclick="addToCart(${p.id})">Add to Cart</button><button class="btn btn-success w-100 py-2 fw-bold" onclick="openCheckout(${p.id})">Buy Now</button></div>`;
+        }
+
+        window.addToCart = function(id) { if(!cart.find(c=>c.id===id)) { cart.push(products.find(p=>p.id===id)); alert("Added!"); backToHome(); } }
+        window.renderCart = function() {
+            const list = document.getElementById('cart-list');
+            list.innerHTML = cart.length ? cart.map(p => `<div class="list-card"><div class="list-left"><img src="${p.img}" class="list-img"><div class="list-info"><h6>${p.title}</h6><span class="text-danger fw-bold">₹${p.price}</span></div></div><div class="list-actions"><button class="btn btn-sm btn-success fw-bold" onclick="openCheckout(${p.id})">Buy</button><i class="fas fa-trash text-danger action-icon" onclick="cart=cart.filter(c=>c.id!=${p.id});renderCart();"></i></div></div>`).join('') : '<div class="text-center text-muted mt-5">Empty</div>';
+        }
+
+        window.openCheckout = function(id) { tempBuyProduct = products.find(x => x.id === id); document.getElementById('checkout-modal').style.display = 'flex'; }
+        window.closeCheckout = function() { document.getElementById('checkout-modal').style.display = 'none'; }
+        
+        window.confirmOrder = async function() {
+            const name = document.getElementById('addr-name').value; const phone = document.getElementById('addr-phone').value;
+            const house = document.getElementById('addr-house').value; const area = document.getElementById('addr-area').value;
+            const pin = document.getElementById('addr-pin').value;
+            const qty = document.getElementById('buy-qty') ? document.getElementById('buy-qty').value : 1;
+            
+            if(name && phone && house && area && pin) {
+                showLoading("Sending Order..."); // MSG 1
+                const orderData = { id: Date.now(), item: tempBuyProduct.title, price: tempBuyProduct.price, qty: qty, img: tempBuyProduct.img, seller: tempBuyProduct.seller, buyer: { name, phone, house, area, pin }, status: 'Pending' };
+                await saveToDB('order', orderData); 
+                
+                // WHATSAPP
+                const sellerObj = sellers.find(s => s.shop === tempBuyProduct.seller);
+                if (sellerObj && sellerObj.phone) {
+                    const total = (parseInt(tempBuyProduct.price) * qty) + parseInt(tempBuyProduct.delivery);
+                    const msg = `🔔 New Order: ${tempBuyProduct.title} (x${qty})%0A💰 Price: ₹${total}%0A👤 Customer: ${name}, ${phone}%0A📍 Loc: ${area}, ${pin}%0APlease check Dashboard.`;
+                    window.open(`https://wa.me/91${sellerObj.phone}?text=${msg}`, '_blank');
+                }
+
+                hideLoading();
+                closeCheckout(); alert("Order Placed!"); switchPage('orders', document.querySelectorAll('.nav-item')[2]);
+            } else alert("Fill details");
+        }
+
+        window.customerLogin = function() { const ph = document.getElementById('cust-phone-input').value; if(ph) { document.getElementById('cust-login-box').style.display='none'; document.getElementById('cust-orders-view').style.display='block'; renderCustOrders(ph); } }
+        window.renderCustOrders = function(phone) {
+            const list = document.getElementById('cust-orders-list');
+            const myOrders = orders.filter(o => o.buyer.phone === phone);
+            list.innerHTML = myOrders.length ? myOrders.map(o => `
+                <div class="list-card" style="display:block;">
+                    <div class="d-flex mb-2"><img src="${o.img}" class="list-img"><div><b>${o.item}</b> (Qty: ${o.qty})<br>Total: ₹${o.price * o.qty}<br>
+                    Status: <span class="badge ${o.status==='Accepted'?'bg-success':'bg-warning text-dark'}">${o.status}</span></div></div>
+                    ${o.status === 'Pending' ? `<button class="btn btn-sm btn-outline-danger w-100" onclick="cancelOrder(${o.db_id}, '${phone}')">Cancel Order</button>` : ''}
+                </div>`).join('') : 'No orders.';
+        }
+
+        window.cancelOrder = async function(db_id, phone) {
+            if(confirm("Cancel this order?")) {
+                showLoading("Cancelling..."); // MSG 2
+                await deleteFromDB(db_id);
+                hideLoading();
+                alert("Order Cancelled!");
+                renderCustOrders(phone);
+            }
+        }
+
+        window.exitOrderView = function() {
+            document.getElementById('cust-orders-view').style.display = 'none';
+            document.getElementById('cust-login-box').style.display = 'block';
+            document.getElementById('cust-phone-input').value = '';
+            switchPage('home', document.querySelectorAll('.nav-item')[0]); // FIXED EXIT
+        }
+
+        // SELLER
+        window.showRegister = function() { document.getElementById('seller-login-view').style.display='none'; document.getElementById('seller-register-view').style.display='block'; }
+        window.showLogin = function() { document.getElementById('seller-register-view').style.display='none'; document.getElementById('seller-dash-view').style.display='none'; document.getElementById('seller-login-view').style.display='block'; }
+        window.registerSeller = async function() {
+            const name = document.getElementById('reg-name').value; const shop = document.getElementById('reg-shop').value; const phone = document.getElementById('reg-phone').value; const pass = document.getElementById('reg-pass').value;
+            if(shop && phone && pass) { await saveToDB('seller', { name, shop, phone, pass }); alert("Registered!"); showLogin(); } else alert("Fill details");
+        }
+        window.loginSeller = async function() {
+            const phone = document.getElementById('login-phone').value; const pass = document.getElementById('login-pass').value;
+            if(sellers.length === 0) await fetchData();
+            const user = sellers.find(s => s.phone === phone && s.pass === pass);
+            if(user) { currentShop = user.shop; localStorage.setItem('kt_shop', currentShop); showDashboard(currentShop); } else alert("Wrong credentials");
+        }
+        window.showDashboard = function(shop) {
+            document.getElementById('seller-login-view').style.display='none'; document.getElementById('seller-register-view').style.display='none';
+            document.getElementById('seller-dash-view').style.display='block'; document.getElementById('dash-shop-name').innerText = shop;
+            refreshSellerDash(); loadAdminMessages(shop);
+        }
+        window.logoutSeller = function() { currentShop = ""; localStorage.removeItem('kt_shop'); showLogin(); }
+        
+        function loadAdminMessages(shopName) {
+            const container = document.getElementById('admin-msg-container');
+            const myMsgs = adminMessages.filter(m => m.to === shopName);
+            container.innerHTML = myMsgs.length > 0 ? myMsgs.map(m => `<div class="msg-box"><strong>Admin:</strong> ${m.msg} <br><small class="text-muted">${m.date}</small></div>`).join('') : '<div class="text-muted small">No messages.</div>';
+        }
+
+        window.payFee = function() { window.location.href = `upi://pay?pa=${settings.upi}&pn=Fee&am=${settings.fee}&cu=INR`; setTimeout(() => { if(confirm("Paid?")) { paymentDone=true; document.getElementById('btn-list-prod').disabled=false; } }, 2000); }
+        
+        window.saveProduct = async function() {
+            if(!paymentDone && !document.getElementById('edit-prod-db-id').value) { alert("Pay Fee"); return; }
+            const dbId = document.getElementById('edit-prod-db-id').value;
+            const name = document.getElementById('prod-name').value; const price = document.getElementById('prod-price').value;
+            const dist = document.getElementById('prod-dist').value; const area = document.getElementById('prod-area').value;
+            const del = document.getElementById('prod-delivery').value; const file = document.getElementById('prod-file');
+            
+            showLoading("Saving Product..."); // MSG 3
+            
+            const finish = async (img) => {
+                if(dbId) { 
+                    const prod = products.find(p=>p.db_id == dbId);
+                    if(prod) {
+                        const updated = { ...prod, title:name, price:price, dist:dist, area:area, delivery:del, img: img || prod.img };
+                        const { db_id, ...cleanContent } = updated;
+                        await updateInDB(dbId, cleanContent); 
+                    }
+                } else { 
+                    const newProd = { id: Date.now(), title: name, price: price, dist: dist, area: area, delivery: del, seller: currentShop, img: img, status: 'Pending' };
+                    await saveToDB('product', newProd); 
+                }
+                hideLoading();
+                alert("Saved Successfully!"); cancelEdit(); refreshSellerDash();
+            };
+            if(file.files[0]) { const r = new FileReader(); r.onload = e => finish(e.target.result); r.readAsDataURL(file.files[0]); } else finish(dbId ? null : 'https://via.placeholder.com/300');
+        }
+
+        window.editProd = function(id) {
+            const p = products.find(x => x.id == id);
+            document.getElementById('form-title').innerText = "Edit Product"; 
+            document.getElementById('edit-prod-id').value = p.id; document.getElementById('edit-prod-db-id').value = p.db_id; 
+            document.getElementById('prod-name').value = p.title; document.getElementById('prod-price').value = p.price;
+            document.getElementById('prod-dist').value = p.dist; document.getElementById('prod-area').value = p.area;
+            document.getElementById('prod-delivery').value = p.delivery;
+            document.getElementById('btn-list-prod').innerText = "Update Product"; document.getElementById('btn-list-prod').disabled = false;
+            document.getElementById('btn-cancel-edit').style.display = 'block'; paymentDone = true;
+            document.getElementById('prod-name').scrollIntoView();
+        }
+
+        window.cancelEdit = function() {
+            document.getElementById('form-title').innerText = "Add Product"; document.getElementById('edit-prod-id').value = ""; document.getElementById('edit-prod-db-id').value = "";
+            document.getElementById('prod-name').value = ""; document.getElementById('prod-price').value = "";
+            document.getElementById('prod-area').value = ""; document.getElementById('prod-delivery').value = ""; document.getElementById('prod-file').value = "";
+            document.getElementById('btn-list-prod').innerText = "List Product"; document.getElementById('btn-list-prod').disabled = true;
+            document.getElementById('btn-cancel-edit').style.display = 'none'; paymentDone = false;
+        }
+
+        window.deleteProd = async function(db_id) { if(confirm("Delete?")) { await deleteFromDB(db_id); refreshSellerDash(); } }
+
+        window.refreshSellerDash = function() {
+            document.getElementById('seller-products-list').innerHTML = products.filter(p=>p.seller===currentShop).map(p=>`
+                <div class="list-card">
+                    <div class="list-left"><img src="${p.img}" class="list-img"><div class="list-info"><h6>${p.title}</h6><small class="badge bg-${p.status==='Approved'?'success':'warning'}">${p.status}</small></div></div>
+                    <div class="list-actions"><i class="fas fa-edit text-primary action-icon" onclick="editProd(${p.id})"></i><i class="fas fa-trash text-danger action-icon" onclick="deleteProd(${p.db_id})"></i></div>
+                </div>`).join('');
+            
+            document.getElementById('seller-orders-list').innerHTML = orders.filter(o=>o.seller===currentShop).map(o=>`
+                <div class="list-card" style="display:block;">
+                    <div class="d-flex mb-2"><img src="${o.img}" class="list-img"><div><b>${o.item}</b> (Qty: ${o.qty})<br>Total: ₹${o.price * o.qty}</div></div>
+                    <div class="small bg-light p-2 mb-2 rounded border"><strong>Buyer:</strong> ${o.buyer.name}<br>${o.buyer.house}, ${o.buyer.area}<br>Phone: ${o.buyer.phone}</div>
+                    <button class="btn btn-sm ${o.status==='Accepted'?'btn-secondary':'btn-success'} w-100" onclick="acceptOrder(${o.db_id})" ${o.status==='Accepted'?'disabled':''}>${o.status==='Accepted'?'Accepted':'Accept Order'}</button>
+                </div>`).join('');
+        }
+
+        window.acceptOrder = async function(db_id) {
+            let order = orders.find(o => o.db_id == db_id);
+            order.status = 'Accepted';
+            const { db_id: _, ...content } = order;
+            await updateInDB(db_id, content);
+            refreshSellerDash();
+        }
+
+        window.downloadApp = function() { if(settings.apkUrl) window.location.href=settings.apkUrl; else alert("Link not available"); }
+        window.openAdminChat = function() { if(settings.adminPhone) window.open(`https://wa.me/${settings.adminPhone}`, '_blank'); else alert("Admin phone not set"); }
+    </script>
+</body>
+</html>
